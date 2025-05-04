@@ -1,15 +1,20 @@
-FROM runpod/base:0.6.3-cuda11.8.0
+FROM python:3.10-slim
 
-# Set python3.11 as the default python
-RUN ln -sf $(which python3.11) /usr/local/bin/python && \
-    ln -sf $(which python3.11) /usr/local/bin/python3
+# Install FFmpeg
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-COPY requirements.txt /requirements.txt
-RUN uv pip install --upgrade -r /requirements.txt --no-cache-dir --system
+# Set workdir
+WORKDIR /app
 
-# Add files
-ADD handler.py .
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Run the handler
-CMD python -u /handler.py
+# Copy the rest of your code
+COPY . .
+
+# Expose port (if needed)
+EXPOSE 8080
+
+# Start the worker
+CMD ["python", "handler.py"]
